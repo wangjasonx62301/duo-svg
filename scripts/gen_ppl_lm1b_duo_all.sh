@@ -11,24 +11,30 @@
 #SBATCH --gres=gpu:1                  # Type/number of GPUs needed
 #SBATCH --open-mode=append            # Do not overwrite logs
 #SBATCH --requeue                     # Requeue upon preemption
-# checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.11.25/112858/checkpoints/1-24000.ckpt
+checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.11.25/112858/checkpoints/1-24000.ckpt
 
-checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.11.25/113046/checkpoints/1-24000.ckpt
-steps=64
+
+# checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.11.25/113046/checkpoints/1-24000.ckpt
+# steps=64
 
 export HYDRA_FULL_ERROR=1
 export CUDA_VISIBLE_DEVICES=0
 
-python -u -m main \
-  mode=sample_eval \
-  loader.batch_size=2 \
-  loader.eval_batch_size=64 \
-  data=lm1b-wrap \
-  algo=duo_base \
-  model=small \
-  model.length=128 \
-  eval.checkpoint_path=$checkpoint_path \
-  sampling.num_sample_batches=15 \
-  sampling.steps=$steps \
-  +wandb.offline=true \
-  sampling.noise_removal=greedy
+for steps in 8 16 32 64 128 256
+do
+    python -u -m main \
+    mode=sample_eval \
+    loader.batch_size=2 \
+    loader.eval_batch_size=64 \
+    data=lm1b-wrap \
+    algo=duo_base \
+    model=small \
+    model.length=128 \
+    eval.checkpoint_path=$checkpoint_path \
+    sampling.num_sample_batches=15 \
+    sampling.steps=$steps \
+    +wandb.offline=true \
+    sampling.noise_removal=greedy
+done
+
+

@@ -108,6 +108,28 @@ class TrainerBase(L.LightningModule):
     self.neg_infinity = -1000000.0
     self.fast_forward_epochs = None
     self.fast_forward_batches = None
+    
+    self.register_buffer(
+      "ground_truth_embedding_weight",
+      torch.randn(self.vocab_size, 1024)
+    )
+
+    self.register_buffer(
+      "ground_truth_linear_weight",
+      torch.randn(1024, self.vocab_size)
+    )
+    
+    
+    # self.ground_truth_embeddings.weight.requires_grad = False
+    # self.ground_truth_head.weight.requires_grad = False
+    
+    self.training_steps = 0
+
+  def embed_ground_truth(self, token_ids):
+    return self.ground_truth_embedding_weight[token_ids]
+
+  def project_ground_truth(self, x):
+    return x @ self.ground_truth_linear_weight
 
   def _validate_configuration(self):
     assert self.config.algo.backbone in {'dit', 'hf_dit'}
@@ -269,6 +291,9 @@ class TrainerBase(L.LightningModule):
              on_step=True,
              on_epoch=False,
              sync_dist=True)
+    
+    self.training_steps += 1
+    
     return losses.loss
 
   def on_train_epoch_end(self):
@@ -369,6 +394,9 @@ class TrainerBase(L.LightningModule):
   def nll(self, input_tokens, output_tokens,
           current_accumulation_step=None, train_mode=False):
     raise NotImplementedError
+  
+  def nll_dual(self, x0, current_accumulation_step=None, train_mode=False):
+    raise NotImplementedError
 
   def _loss(self, x0, valid_tokens,
             current_accumulation_step=None,
@@ -382,11 +410,20 @@ class TrainerBase(L.LightningModule):
     if self.ignore_bos:
       loss[:, 1:] = loss[:, 1:]
       valid_tokens[:, 1:] = valid_tokens[:, 1:]
-
     nlls = (loss * valid_tokens).sum()
+
+    # loss = self.nll_dual(input_tokens, current_accumulation_step, train_mode)
+    # assert loss.loss.ndim == 2
+    # if self.ignore_bos:
+    #   loss.loss[:, 1:] = loss.loss[:, 1:]
+    #   valid_tokens[:, 1:] = valid_tokens[:, 1:]
+    # nlls = (loss.loss * valid_tokens).sum()
+    
     num_tokens = valid_tokens.sum()
     token_nll = nlls / num_tokens
 
+    
+    
     return Loss(loss=token_nll,
                 nlls=nlls,
                 prior_loss=0.0,
@@ -479,6 +516,132 @@ class Diffusion(TrainerBase):
       alpha_t=alpha_t,
       dalpha_t=dalpha_t,
       low_var=train_mode and self.loss_type == 'low_var')
+  
+  @staticmethod
+  def time_interval(min_interval=3e-4, max_interval=3e-3, current_steps=10000, total_steps=5610000):
+    return min_interval + (max_interval - min_interval) * (current_steps / total_steps)
+  
+  @staticmethod
+  def guidance_score_scheduler(initial=0.5, final=2.5, current_steps=10000, total_steps=5610000):
+    # exponential schedule
+    ratio = current_steps / total_steps
+    return initial * ((final / initial) ** ratio)
+  
+  def nll_dual(self, x0, current_accumulation_step=None, train_mode=False):
+    t1 = self._sample_t(x0.shape[0],
+                        current_accumulation_step)
+    
+    if self.T > 0:
+      t1 = (t1 * self.T).to(torch.int)
+      t1 = t1 / self.T
+      # t \in {1/T, 2/T, ..., 1}
+      t1 += (1 / self.T)
+    
+    interval = self.time_interval(current_steps=self.training_steps)
+    t2 = torch.clamp(t1 - interval, min=t1 / 2)
+    
+    dalpha_t1, alpha_t1 = self.noise(t1)
+    dalpha_t2, alpha_t2 = self.noise(t2)
+    
+    alpha_t1 = alpha_t1.unsqueeze(-1)
+    alpha_t2 = alpha_t2.unsqueeze(-1)
+    
+    sigma1 = self._sigma_from_alphat(alpha_t1)
+    sigma2 = self._sigma_from_alphat(alpha_t2)
+    
+    # print(sigma1.shape, sigma2.shape)
+    
+
+    
+    x_t1 = self.q_xt(x0, alpha_t1)
+    x_t2 = self.q_xt(x0, alpha_t2)
+    
+    log_x_theta1 = self.forward(x_t1, sigma=sigma1)
+    log_x_theta2 = self.forward(x_t2, sigma=sigma2)
+    
+    # x0_onehot = F.one_hot(x0, num_classes=log_x_theta1.shape[-1]).float()
+    
+    x_theta1 = F.log_softmax(log_x_theta1, dim=-1)
+    x_theta2 = F.log_softmax(log_x_theta2, dim=-1)
+    
+    x_theta1 = x_theta1 @ self.backbone.vocab_embed.embedding.detach()
+    x_theta2 = x_theta2 @ self.backbone.vocab_embed.embedding.detach()
+    
+    # print(log_x_theta1.shape, log_x_theta2.shape)
+    
+    # print(x0.dtype, x0.shape)
+    x_0_latent = self.backbone.vocab_embed(x0).detach()
+    # print(x_0_latent.shape)
+    # x_0_latent = self.embed_ground_truth(x0)
+    # gt_logits = self.project_ground_truth(x_0_latent)
+      
+    # print(x0.shape, log_x_theta1.shape, log_x_theta2.shape)
+    
+    guidance_primary = (x_theta1 - x_theta2)
+    guidance_compare = (x_theta1 - x_0_latent)
+    cosine_sim = F.cosine_similarity(guidance_primary.view(guidance_primary.size(0), -1),
+                                     guidance_compare.view(guidance_compare.size(0), -1),
+                                     dim=-1)
+    
+    if cosine_sim.isnan().any() or cosine_sim.isinf().any():
+            cosine_sim = torch.zeros_like(cosine_sim)
+            print('warning: nan or inf in cosine similarity!')
+            # dist.print0('warning: nan or inf in cosine similarity!')
+            
+    loss_guidance = (1 + 1e-9 - cosine_sim.mean())
+    
+    nll_loss = self.nll_per_token(
+      log_x_theta=log_x_theta1,
+      xt=x_t1,
+      x0=x0,
+      alpha_t=alpha_t1,
+      dalpha_t=dalpha_t1,
+      low_var=train_mode and self.loss_type == 'low_var')
+    
+    guidance_score_scale_min = 1e-6
+    guidance_score_scale_max = 1e-1
+    
+    guidance_scale = self.guidance_score_scheduler(current_steps=self.training_steps, initial=guidance_score_scale_min, final=guidance_score_scale_max)
+    
+    loss = nll_loss + guidance_scale * loss_guidance
+    # print('Guidance Scale:', guidance_scale, 'Loss Guidance:', loss_guidance.item(), 'Current Steps:', self.training_steps)
+    
+    self.log(name='trainer/guidance_loss',
+             value=loss_guidance,
+             on_step=True,
+             on_epoch=True,
+             prog_bar=True,
+             logger=True,
+             sync_dist=True)
+    
+    self.log(name='trainer/nlls',
+             value=nll_loss.mean(),
+             on_step=True,
+             on_epoch=True,
+             prog_bar=False,
+             logger=True,
+             sync_dist=True)
+    
+    self.log(name='trainer/guidance_scale',
+             value=guidance_scale,
+             on_step=True,
+             on_epoch=True,
+             prog_bar=False,
+             logger=True,
+             sync_dist=True)
+    
+    total_loss = loss.mean()
+    
+    self.log(name='trainer/total_loss',
+             value=total_loss,
+             on_step=True,
+             on_epoch=True,
+             prog_bar=True,
+             logger=True,
+             sync_dist=True)
+    
+    return Loss(loss=loss, nlls=nll_loss, prior_loss=0.0, num_tokens=torch.tensor(x0.numel(), device=x0.device))
+    
 
   def _get_score(self, **kwargs):
     del kwargs

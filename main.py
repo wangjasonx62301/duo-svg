@@ -31,7 +31,8 @@ def _load_from_checkpoint(diffusion_model, config, tokenizer):
   return diffusion_model.load_from_checkpoint(
     config.eval.checkpoint_path,
     tokenizer=tokenizer,
-    config=config)
+    config=config,
+    strict=False)
 
 
 @L.pytorch.utilities.rank_zero_only
@@ -195,7 +196,8 @@ def _train(diffusion_model, config, logger, tokenizer):
     model = diffusion_model.load_from_checkpoint(
       config.training.finetune_path,
       tokenizer=tokenizer,
-      config=config)
+      config=config,
+      strict=False)
   else:
     model = diffusion_model(config, tokenizer=valid_ds.tokenizer)
 

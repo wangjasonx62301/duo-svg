@@ -1,31 +1,27 @@
 #!/bin/bash
-#SBATCH -J eval_mdlm                  # Job name
+#SBATCH -J owt_duo_anneal                    # Job name
 #SBATCH -o watch_folder/%x_%j.out     # log file (out & err)
 #SBATCH -N 1                          # Total number of nodes requested
 #SBATCH --get-user-env                # retrieve the users login environment
 #SBATCH --mem=100000                  # server memory requested (per node)
 #SBATCH -t 960:00:00                  # Time limit (hh:mm:ss)
-#SBATCH --partition=gpu               # Request partition
+#SBATCH --partition=kuleshov          # Request partition
 #SBATCH --constraint="[a5000|a6000|a100|3090]"
-#SBATCH --ntasks-per-node=4
-#SBATCH --gres=gpu:4                  # Type/number of GPUs needed
+#SBATCH --ntasks-per-node=1
+#SBATCH --gres=gpu:1                  # Type/number of GPUs needed
 #SBATCH --open-mode=append            # Do not overwrite logs
 #SBATCH --requeue                     # Requeue upon preemption
 
-checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.11.25/113046/checkpoints/1-22500.ckpt
-
-export HYDRA_FULL_ERROR=1
-export HYDRA_FULL_ERROR=1
+checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/wikitext2/2025.11.18/141537/checkpoints/best.ckpt
 
 export CUDA_VISIBLE_DEVICES=0
 
-python -u -m main \
+python main.py \
   mode=ppl_eval \
-  loader.batch_size=64 \
-  loader.eval_batch_size=64 \
-  data=lm1b-wrap \
+  loader.batch_size=8 \
+  loader.eval_batch_size=8 \
+  data=wikitext2 \
   model=small \
-  model.length=128 \
   algo=duo_base \
   eval.checkpoint_path=$checkpoint_path \
   sampling.num_sample_batches=0 \
