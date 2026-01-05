@@ -521,11 +521,15 @@ class Diffusion(TrainerBase):
       low_var=train_mode and self.loss_type == 'low_var')
   
   @staticmethod
-  def time_interval(min_interval=3e-4, max_interval=3e-3, current_steps=10000, total_steps=5610000):
+  def time_interval(min_interval=3e-4, max_interval=3e-3, current_steps=10000, total_steps=204800000, batch_size=None):
+    if batch_size is not None:
+      total_steps /= batch_size
     return min_interval + (max_interval - min_interval) * (current_steps / total_steps)
   
   @staticmethod
-  def guidance_score_scheduler(initial=0.5, final=2.5, current_steps=10000, total_steps=5610000):
+  def guidance_score_scheduler(initial=0.5, final=2.5, current_steps=10000, total_steps=204800000, batch_size=None):
+    if batch_size is not None:
+      total_steps /= batch_size
     # exponential schedule
     ratio = current_steps / total_steps
     return initial * ((final / initial) ** ratio)
@@ -540,7 +544,7 @@ class Diffusion(TrainerBase):
       # t \in {1/T, 2/T, ..., 1}
       t1 += (1 / self.T)
     
-    interval = self.time_interval(current_steps=self.training_steps)
+    interval = self.time_interval(current_steps=self.training_steps, batch_size=self.config.loader.batch_size)
     t2 = torch.clamp(t1 - interval, min=t1 / 2)
     
     dalpha_t1, alpha_t1 = self.noise(t1)
@@ -604,7 +608,7 @@ class Diffusion(TrainerBase):
     guidance_score_scale_min = 1e-6
     guidance_score_scale_max = 1e-1
     
-    guidance_scale = self.guidance_score_scheduler(current_steps=self.training_steps, initial=guidance_score_scale_min, final=guidance_score_scale_max)
+    guidance_scale = self.guidance_score_scheduler(current_steps=self.training_steps, initial=guidance_score_scale_min, final=guidance_score_scale_max, batch_size=self.config.loader.batch_size)
     
     loss = nll_loss + guidance_scale * loss_guidance
     # print('Guidance Scale:', guidance_scale, 'Loss Guidance:', loss_guidance.item(), 'Current Steps:', self.training_steps)
