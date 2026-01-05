@@ -19,43 +19,56 @@ def load_metrics(base_path, xs):
         }
     return result
 
+modelB_path = "./outputs/lm1b/20000_duo_1024_baseline"
+modelC_path = "./outputs/lm1b/20000_duo_1024_svg"
+modelD_path = "./outputs/lm1b/30000_duo_1024_baseline"
 
-
-modelA_path = "./outputs/lm1b/baseline_gen_ppl_24000"
-modelB_path = "./outputs/lm1b/svg_gen_ppl_24000"
-
-steps = [8, 16, 32, 64, 128, 256]
+steps = [8, 16, 32, 64, 128]
 x_pos = range(len(steps))
 
-modelA = load_metrics(modelA_path, steps)
+# modelA = load_metrics(modelA_path, steps)
 modelB = load_metrics(modelB_path, steps)
+modelC = load_metrics(modelC_path, steps)
+modelD = load_metrics(modelD_path, steps)
 
 
-
-xA = list(modelA.keys())
-yA = [modelA[x]["gen_ppl"] for x in xA]
-eA = [modelA[x]["entropy"] for x in xA]
+# xA = list(modelA.keys())
+# yA = [modelA[x]["gen_ppl"] for x in xA]
+# eA = [modelA[x]["entropy"] for x in xA]
 
 xB = list(modelB.keys())
 yB = [modelB[x]["gen_ppl"] for x in xB]
 eB = [modelB[x]["entropy"] for x in xB]
 
+xC = list(modelC.keys())
+yC = [modelC[x]["gen_ppl"] for x in xC]
+eC = [modelC[x]["entropy"] for x in xC]
 
+xD = list(modelD.keys())
+yD = [modelD[x]["gen_ppl"] for x in xD]
+eD = [modelD[x]["entropy"] for x in xD]
 
 plt.figure(figsize=(8, 5))
 
-plt.plot(x_pos, yA, marker="o", label="Baseline")
-for x, y, ent in zip(x_pos, yA, eA):
-    plt.text(x, y, f"({ent:.2f})", fontsize=9, ha='right', va='bottom')
+# plt.plot(x_pos, yA, marker="o", label="MDLM", color='sandybrown', linestyle='--', alpha=0.7)
+# for x, y, ent in zip(x_pos, yA, eA):
+    # plt.text(x, y, f"({ent:.2f})", fontsize=9, ha='right', va='bottom')
 
-plt.plot(x_pos, yB, marker="o", label="SVG")
-for x, y, ent in zip(x_pos, yB, eB):
-    plt.text(x, y, f"({ent:.2f})", fontsize=9, ha='left', va='bottom')
+plt.plot(x_pos, yB, marker="o", label="20000s baseline", color='cornflowerblue', alpha=0.9)
+# for x, y, ent in zip(x_pos, yB, eB):
+#     plt.text(x, y, f"({ent:.2f})", fontsize=9, ha='left', va='bottom')
 
+plt.plot(x_pos, yC, marker="o", label="20000s svg", color='cornflowerblue', linestyle='--', alpha=0.7)
+# for x, y, ent in zip(x_pos, yC, eC):
+#     plt.text(x, y, f"({ent:.2f})", fontsize=9, ha='right', va='top')
+
+plt.plot(x_pos, yD, marker="o", label="30000s baseline", color='sandybrown', alpha=0.9)
+# for x, y, ent in zip(x_pos, yD, eD):
+#     plt.text(x, y, f"({ent:.2f})", fontsize=9, ha='left', va='top')
 
 plt.xlabel("Sampling steps")
 plt.ylabel("Generative PPL")
-plt.title("Gen PPL and Entropy")
+plt.title("Gen PPL (len=1024) vs Sampling Steps on LM1B Duo")
 plt.xticks(x_pos, steps)
 
 plt.legend()
@@ -64,5 +77,5 @@ plt.grid(True, linestyle="--", alpha=0.3)
 plt.tight_layout()
 
 
-output_path = "/home/jasonx62301/for_python/duo/duo/plot/gen_ppl_24000.png"
+output_path = "/home/jasonx62301/for_python/duo/duo/plot/gen_ppl_total.png"
 plt.savefig(output_path)

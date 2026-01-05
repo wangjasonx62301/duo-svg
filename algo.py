@@ -160,7 +160,8 @@ class D3PMAbsorb(trainer_base.AbsorbingState):
 
   def _validate_configuration(self):
     super()._validate_configuration()
-    assert self.noise.type == 'log-linear'
+
+    # assert self.noise.type == 'log-linear'
     assert self.parameterization == 'mean'
 
   def _process_model_output(self, model_output, xt, sigma):

@@ -1,7 +1,7 @@
 train: wikitext2
 valid: wikitext2
-tokenizer_name_or_path: gpt2
-cache_dir: /home/jasonx62301/for_python/duo/duo/wikitext2_cache
+tokenizer_name_or_path: bert-base-uncased
+cache_dir: /home/jasonx62301/duo_wrapped_data/wikitext
 wrap: True
 streaming: False
 insert_train_eos: True

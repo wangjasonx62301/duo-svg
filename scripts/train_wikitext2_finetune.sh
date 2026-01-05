@@ -31,7 +31,7 @@ python -u -m main \
   model=small \
   algo=duo_base \
   model.length=1024 \
-  wandb.name=duo-wikitext2-finetune-svg-with-emb \
+  wandb.name=duo-wikitext2-finetune-baseline-without-curri \
   training.finetune_path=$finetune_path \
   sampling.num_sample_batches=0 \
   trainer.max_steps=10000 

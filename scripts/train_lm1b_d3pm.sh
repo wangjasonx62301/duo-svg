@@ -15,12 +15,17 @@
 
 # To enable preemption re-loading, set `hydra.run.dir` or 
 # `checkpointing.save_dir` explicitly.
-srun python -u -m main \
-  loader.batch_size=64 \
-  loader.eval_batch_size=64 \
+export CUDA_VISIBLE_DEVICES=0
+export HYDRA_FULL_ERROR=1
+export CUDA_LAUNCH_BLOCKING=1
+
+python -u -m main \
+  loader.batch_size=32 \
+  loader.eval_batch_size=32 \
   model=small \
-  data=lm1b \
-  wandb.name=d3pm-lm1b \
+  data=lm1b-wrap \
+  wandb.name=d3pm-lm1b-baseline \
   algo=d3pm \
   model.length=128 \
-  eval.compute_generative_perplexity=False 
+  eval.compute_generative_perplexity=False \
+  trainer.max_steps=100000
