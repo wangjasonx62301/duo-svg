@@ -12,7 +12,7 @@
 #SBATCH --open-mode=append            # Do not overwrite logs
 #SBATCH --requeue                     # Requeue upon preemption
 
-checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.12.22/220532/checkpoints/best.ckpt
+checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.12.22/220532/checkpoints/24-40000.ckpt
 
 
 # checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.12.22/221821/checkpoints/24-40000.ckpt

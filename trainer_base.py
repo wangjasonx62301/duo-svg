@@ -521,13 +521,13 @@ class Diffusion(TrainerBase):
       low_var=train_mode and self.loss_type == 'low_var')
   
   @staticmethod
-  def time_interval(min_interval=3e-4, max_interval=3e-3, current_steps=10000, total_steps=204800000, batch_size=None):
+  def time_interval(min_interval=3e-4, max_interval=3e-3, current_steps=10000, total_steps=169600000, batch_size=None):
     if batch_size is not None:
       total_steps /= batch_size
     return min_interval + (max_interval - min_interval) * (current_steps / total_steps)
   
   @staticmethod
-  def guidance_score_scheduler(initial=0.5, final=2.5, current_steps=10000, total_steps=204800000, batch_size=None):
+  def guidance_score_scheduler(initial=0.5, final=2.5, current_steps=10000, total_steps=169600000, batch_size=None):
     if batch_size is not None:
       total_steps /= batch_size
     # exponential schedule

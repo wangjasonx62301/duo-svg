@@ -16,7 +16,7 @@
 # To enable preemption re-loading, set `hydra.run.dir` or 
 # `checkpointing.save_dir` explicitly.
 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 export HYDRA_FULL_ERROR=1
 export CUDA_LAUNCH_BLOCKING=1
 
@@ -24,7 +24,7 @@ python -u -m main \
   loader.batch_size=4 \
   loader.eval_batch_size=4 \
   data=lm1b-wrap \
-  wandb.name=duo-lm1b-baseline-gpt2-no-curriculum-model-length-1024-fix \
+  wandb.name=duo-lm1b-svg-gpt2-no-curriculum-model-length-1024-scheduler-fix \
   model=small \
   algo=duo \
   algo.curriculum_start=0 \
@@ -35,4 +35,5 @@ python -u -m main \
   algo.gamma_max=-1.75 \
   model.length=1024 \
   trainer.max_steps=100000 \
+  checkpointing.save_dir=outputs/lm1b/duo_svg_gpt2_no_curriculum_model_length_1024_scheduler_fix
   
