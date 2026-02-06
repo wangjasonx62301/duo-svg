@@ -24,7 +24,7 @@ python -u -m main \
   loader.batch_size=4 \
   loader.eval_batch_size=4 \
   data=lm1b-wrap \
-  wandb.name=duo-lm1b-svg-length-1024-scheduler-exponential \
+  wandb.name=duo-lm1b-svg-length-1024-scheduler-fix \
   model=small \
   algo=duo \
   algo.curriculum_start=0 \
@@ -36,8 +36,8 @@ python -u -m main \
   model.length=1024 \
   trainer.max_steps=100000 \
   checkpointing.resume_from_ckpt=true \
-  checkpointing.save_dir=outputs/lm1b/duo-lm1b-svg-1024-scheduler-exponential \
-  checkpointing.resume_ckpt_path=/home/jasonx62301/for_python/duo-svg/duo-svg/outputs/lm1b/2026.01.26/104720/outputs/lm1b/duo-lm1b-svg-1024-scheduler-exponential/checkpoints/34-56000.ckpt
+  checkpointing.save_dir=outputs/lm1b/duo-lm1b-svg-1024-scheduler-fix \
+  # checkpointing.resume_ckpt_path=/home/jasonx62301/for_python/duo-svg/duo-svg/outputs/lm1b/2026.01.26/104720/outputs/lm1b/duo-lm1b-svg-1024-scheduler-exponential/checkpoints/34-56000.ckpt
 
 # python -u -m main \
 #   loader.batch_size=4 \
