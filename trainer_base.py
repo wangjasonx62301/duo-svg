@@ -405,22 +405,22 @@ class TrainerBase(L.LightningModule):
      valid_tokens) = self._process_model_input(
        x0, valid_tokens)
     ################################
-    loss = self.nll(input_tokens, output_tokens,
-                    current_accumulation_step, train_mode)
-    # for ar:
-    # loss = self.nll(input_tokens, output_tokens,current_accumulation_step)
-    assert loss.ndim == 2
-    if self.ignore_bos:
-      loss[:, 1:] = loss[:, 1:]
-      valid_tokens[:, 1:] = valid_tokens[:, 1:]
-    nlls = (loss * valid_tokens).sum()
-    ################################
-    # loss = self.nll_dual(input_tokens, current_accumulation_step, train_mode)
-    # assert loss.loss.ndim == 2
+    # loss = self.nll(input_tokens, output_tokens,
+    #                 current_accumulation_step, train_mode)
+    # # for ar:
+    # # loss = self.nll(input_tokens, output_tokens,current_accumulation_step)
+    # assert loss.ndim == 2
     # if self.ignore_bos:
-    #   loss.loss[:, 1:] = loss.loss[:, 1:]
+    #   loss[:, 1:] = loss[:, 1:]
     #   valid_tokens[:, 1:] = valid_tokens[:, 1:]
-    # nlls = (loss.loss * valid_tokens).sum()
+    # nlls = (loss * valid_tokens).sum()
+    ################################
+    loss = self.nll_dual(input_tokens, current_accumulation_step, train_mode)
+    assert loss.loss.ndim == 2
+    if self.ignore_bos:
+      loss.loss[:, 1:] = loss.loss[:, 1:]
+      valid_tokens[:, 1:] = valid_tokens[:, 1:]
+    nlls = (loss.loss * valid_tokens).sum()
     ################################
     num_tokens = valid_tokens.sum()
     token_nll = nlls / num_tokens
@@ -608,7 +608,8 @@ class Diffusion(TrainerBase):
     guidance_score_scale_min = 1e-6
     guidance_score_scale_max = 1e-1
     
-    guidance_scale = self.guidance_score_scheduler(current_steps=self.training_steps, initial=guidance_score_scale_min, final=guidance_score_scale_max, batch_size=self.config.loader.batch_size)
+    # guidance_scale = self.guidance_score_scheduler(current_steps=self.training_steps, initial=guidance_score_scale_min, final=guidance_score_scale_max, batch_size=self.config.loader.batch_size)
+    guidance_scale = 1e-4
     
     loss = nll_loss + guidance_scale * loss_guidance
     # print('Guidance Scale:', guidance_scale, 'Loss Guidance:', loss_guidance.item(), 'Current Steps:', self.training_steps)

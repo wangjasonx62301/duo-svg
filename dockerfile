@@ -44,6 +44,5 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 RUN pip install --no-cache-dir flash_attn==2.7.4.post1 --no-build-isolation
 
-COPY . .
 
 CMD ["bash"]

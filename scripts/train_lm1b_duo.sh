@@ -24,7 +24,7 @@ python -u -m main \
   loader.batch_size=4 \
   loader.eval_batch_size=4 \
   data=lm1b-wrap \
-  wandb.name=duo-lm1b-svg-gpt2-no-curriculum-model-length-1024-scheduler-fix \
+  wandb.name=duo-lm1b-svg-length-1024-scheduler-exponential \
   model=small \
   algo=duo \
   algo.curriculum_start=0 \
@@ -35,5 +35,25 @@ python -u -m main \
   algo.gamma_max=-1.75 \
   model.length=1024 \
   trainer.max_steps=100000 \
-  checkpointing.save_dir=outputs/lm1b/duo_svg_gpt2_no_curriculum_model_length_1024_scheduler_fix
-  
+  checkpointing.resume_from_ckpt=true \
+  checkpointing.save_dir=outputs/lm1b/duo-lm1b-svg-1024-scheduler-exponential \
+  checkpointing.resume_ckpt_path=/home/jasonx62301/for_python/duo-svg/duo-svg/outputs/lm1b/2026.01.26/104720/outputs/lm1b/duo-lm1b-svg-1024-scheduler-exponential/checkpoints/34-56000.ckpt
+
+# python -u -m main \
+#   loader.batch_size=4 \
+#   loader.eval_batch_size=4 \
+#   data=lm1b-wrap \
+#   wandb.name=duo-lm1b-baseline-gpt2-no-curriculum-model-length-1024-fix \
+#   model=small \
+#   algo=duo \
+#   algo.curriculum_start=0 \
+#   algo.curriculum_end=0 \
+#   algo.gumbel_tau_log10_start=-3.0 \
+#   algo.gumbel_tau_log10_end=-3.0 \
+#   algo.gamma_min=-3.5 \
+#   algo.gamma_max=-1.75 \
+#   model.length=1024 \
+#   checkpointing.save_dir=outputs/lm1b/duo_svg_gpt2_no_curriculum_model_length_1024_fix \
+#   checkpointing.resume_from_ckpt=true \
+#   checkpointing.resume_ckpt_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.12.22/221821/checkpoints/42-70000.ckpt \
+#   trainer.max_steps=30000 \

@@ -12,26 +12,26 @@
 #SBATCH --open-mode=append            # Do not overwrite logs
 #SBATCH --requeue                     # Requeue upon preemption
 
-checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.12.22/220532/checkpoints/24-40000.ckpt
+checkpoint_path=/home/jasonx62301/for_python/duo-svg/duo-svg/outputs/lm1b/2026.01.29/100349/outputs/lm1b/duo-lm1b-svg-1024-scheduler-exponential/checkpoints/43-70000.ckpt
 
 
-# checkpoint_path=/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.12.22/221821/checkpoints/24-40000.ckpt
+# checkpoint_path=/home/jasonx62301/for_python/duo-svg/duo-svg/outputs/lm1b/2026.01.08/095118/outputs/lm1b/duo-lm1b-baseline-gpt2-no-curriculum-model-length-1024-resume-from-70000/checkpoints/60-100000.ckpt
 
 export HYDRA_FULL_ERROR=1
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=3
 
-for steps in 8 16 32 64 128 256 512
+for steps in 8 16 32 64 128 256 512 1024
 do
     python -u -m main \
     mode=sample_eval \
-    loader.batch_size=4 \
-    loader.eval_batch_size=4 \
+    loader.batch_size=8 \
+    loader.eval_batch_size=8 \
     data=lm1b-wrap \
     algo=duo_base \
     model=small \
     model.length=1024 \
     eval.checkpoint_path=$checkpoint_path \
-    sampling.num_sample_batches=50 \
+    sampling.num_sample_batches=125 \
     sampling.steps=$steps \
     +wandb.offline=true \
     sampling.noise_removal=greedy

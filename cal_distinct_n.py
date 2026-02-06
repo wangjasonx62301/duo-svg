@@ -69,7 +69,7 @@ def process_json_file(
 
 
 if __name__ == "__main__":
-    file_path = "/home/jasonx62301/for_python/duo/duo/outputs/lm1b/2025.12.25/052831/samples.json"
+    file_path = "/home/jasonx62301/for_python/duo-svg/duo-svg/outputs/lm1b/duo_svg_1024-30000/256/samples.json"
     tokenizer_name_or_path = "gpt2"  # or any other pretrained tokenizer
     process_json_file(file_path, tokenizer_name_or_path=tokenizer_name_or_path)
     

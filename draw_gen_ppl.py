@@ -19,11 +19,11 @@ def load_metrics(base_path, xs):
         }
     return result
 
-modelB_path = "./outputs/lm1b/20000_duo_1024_baseline"
-modelC_path = "./outputs/lm1b/20000_duo_1024_svg"
-modelD_path = "./outputs/lm1b/30000_duo_1024_baseline"
+modelB_path = "./outputs/lm1b/duo_baseline_1024"
+modelC_path = "./outputs/lm1b/duo_svg_1024-30000"
+modelD_path = "./outputs/lm1b/temp_svg-50000"
 
-steps = [8, 16, 32, 64, 128]
+steps = [8, 16, 32, 64, 128, 256]
 x_pos = range(len(steps))
 
 # modelA = load_metrics(modelA_path, steps)
@@ -54,15 +54,15 @@ plt.figure(figsize=(8, 5))
 # for x, y, ent in zip(x_pos, yA, eA):
     # plt.text(x, y, f"({ent:.2f})", fontsize=9, ha='right', va='bottom')
 
-plt.plot(x_pos, yB, marker="o", label="20000s baseline", color='cornflowerblue', alpha=0.9)
+plt.plot(x_pos, yB, marker="o", label="100000s baseline", color='cornflowerblue', alpha=0.9)
 # for x, y, ent in zip(x_pos, yB, eB):
 #     plt.text(x, y, f"({ent:.2f})", fontsize=9, ha='left', va='bottom')
 
-plt.plot(x_pos, yC, marker="o", label="20000s svg", color='cornflowerblue', linestyle='--', alpha=0.7)
+plt.plot(x_pos, yC, marker="o", label="30000s svg", color='sandybrown', linestyle='--', alpha=0.7)
 # for x, y, ent in zip(x_pos, yC, eC):
 #     plt.text(x, y, f"({ent:.2f})", fontsize=9, ha='right', va='top')
 
-plt.plot(x_pos, yD, marker="o", label="30000s baseline", color='sandybrown', alpha=0.9)
+plt.plot(x_pos, yD, marker="o", label="50000s svg", color='sandybrown', alpha=0.9)
 # for x, y, ent in zip(x_pos, yD, eD):
 #     plt.text(x, y, f"({ent:.2f})", fontsize=9, ha='left', va='top')
 
@@ -77,5 +77,9 @@ plt.grid(True, linestyle="--", alpha=0.3)
 plt.tight_layout()
 
 
-output_path = "/home/jasonx62301/for_python/duo/duo/plot/gen_ppl_total.png"
+import os
+if not os.path.exists("/home/jasonx62301/for_python/duo-svg/duo-svg/plot"):
+    os.makedirs("/home/jasonx62301/for_python/duo-svg/duo-svg/plot")
+
+output_path = "/home/jasonx62301/for_python/duo-svg/duo-svg/plot/faster_convergence_50000.png"
 plt.savefig(output_path)
